@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Send Discord Text</title>
+<title>Send Discord Mixed</title>
 <style>
 body { font-family: Arial; background: #0f172a; color: white; padding: 20px; }
 input, textarea, button { width: 100%; margin-top: 10px; padding: 10px; font-size: 16px; }
@@ -11,10 +11,10 @@ button { background: #3b82f6; color: white; border: none; }
 </head>
 <body>
 
-<h2>Gửi Text Discord</h2>
+<h2>Gửi Tiêu đề + Nội dung Embed</h2>
 
-<input id="title" placeholder="Tiêu đề">
-<textarea id="content" rows="6" placeholder="Nội dung"></textarea>
+<input id="title" placeholder="Tiêu đề (text thường)">
+<textarea id="content" rows="6" placeholder="Nội dung (embed)"></textarea>
 <button onclick="send()">Gửi</button>
 
 <script>
@@ -25,7 +25,13 @@ function send() {
   const content = document.getElementById("content").value;
 
   const data = {
-    content: "**" + title + "**\n" + content
+    content: title, // Tiêu đề bình thường
+    embeds: [
+      {
+        description: content, // Nội dung trong embed
+        color: 3447003
+      }
+    ]
   };
 
   fetch(webhook, {
