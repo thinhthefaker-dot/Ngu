@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Send Discord Embed</title>
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+input, textarea, button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 16px;
+}
+button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+}
+</style>
+</head>
+<body>
+
+<h2>Gửi Embed Discord</h2>
+
+<input id="title" placeholder="Tiêu đề">
+<textarea id="content" rows="6" placeholder="Nội dung"></textarea>
+<button onclick="send()">Gửi</button>
+
+<script>
+function send() {
+  const webhook = "https://discord.com/api/webhooks/1432731208969621596/4BS7RS1XF6Mq8AhdhPEy2fRgVj30nLASmw5Uv0TzXIuHdhc16ldQsndx01L3XJV0HlWD"
+
+  const title = document.getElementById("title").value
+  const content = document.getElementById("content").value
+
+  const data = {
+    embeds: [
+      {
+        title: title,
+        description: content,
+        color: 3447003
+      }
+    ]
+  }
+
+  fetch(webhook, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  })
+}
+</script>
+
+</body>
+</html>
