@@ -1,46 +1,173 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Send Discord Mixed</title>
+<title>Brainrot Webhook Sender</title>
 <style>
-body { font-family: Arial; background: #0f172a; color: white; padding: 20px; }
-input, textarea, button { width: 100%; margin-top: 10px; padding: 10px; font-size: 16px; }
-button { background: #3b82f6; color: white; border: none; }
+body { font-family: Arial; padding: 20px; }
+input, button { padding: 8px; margin: 5px 0; width: 100%; }
+#log { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 5px; background: #f9f9f9; }
 </style>
 </head>
 <body>
-
-<h2>Gửi Tiêu đề + Nội dung </h2>
-
-<input id="title" placeholder="Tiêu đề (text thường)">
-<textarea id="content" rows="6" placeholder="Nội dung (embed)"></textarea>
-<button onclick="send()">Gửi</button>
+<h2>Brainrot Webhook Sender</h2>
+<input type="text" id="webhook" placeholder="Enter Discord Webhook URL">
+<button id="startBtn">Start</button>
+<button id="stopBtn">Stop</button>
+<button id="sendNowBtn">Send Now</button>
+<div id="log"></div>
 
 <script>
-function send() {
-  const webhook = "https://discord.com/api/webhooks/1460604391512998045/pF-4_t-UOQ0YyB8AWGUcYYN8htbXh3RY5hOCi5IeXfHTLb6sEcYjxEdqYWXfIkj7TYYY";
+let running = false;
+let loopTimeout = null;
 
-  const title = document.getElementById("title").value;
-  const content = document.getElementById("content").value;
+const brainrots = [
+["Graipuss Medussi", 1_000_000, 0.08],
+["Perrito Burrito", 1_000_000, 0.08],
+["1x1x1x1", 1_100_000, 0.08],
+["Nooo My Hotspot", 1_500_000, 0.08],
+["Los Jobolitos", 1_500_000, 0.08],
+["Noo My Examen", 1_700_000, 0.08],
+["La Sahur Combinasion", 2_000_000, 0.08],
+["Telemorte", 2_000_000, 0.08],
+["Ta ta ta Sahur", 2_200_000, 0.08],
+["Pet Hotspot", 2_500_000, 0.08],
+["Pirulitoita Bicicleteira", 2_500_000, 0.08],
+["Horegni Boom", 2_700_000, 0.08],
+["Quesadilla Cocodrillo", 3_000_000, 0.08],
+["Pet Pumpkin", 3_000_000, 0.08],
+["Chicleteira Bicicleteira", 3_500_000, 0.08],
+["Quesadillo Vampiro", 3_500_000, 0.08],
+["Burrito Bandito", 4_000_000, 0.08],
+["Chicleteirina Bicicleteirina", 4_000_000, 0.08],
+["Noo my Candy", 5_000_000, 0.08],
+["Los Noo My Hotspotitos", 5_500_000, 0.08],
+["La Grande Combinasion", 10_000_000, 0.08],
+["Nuclearo Dinossauro", 15_000_000, 0.02],
+["Chicleteira Noelteira", 15_000_000, 0.02],
+["Los Combinasionas", 15_000_000, 0.02],
+["Las Sis", 17_500_000, 0.02],
+["Chillin Chill", 25_000_000, 0.02],
+["Los Puggles", 30_000_000, 0.02],
+["Los Primos", 31_000_000, 0.02],
+["Eviledon", 31_500_000, 0.02],
+["Tang Tang Keletang", 33_500_000, 0.02],
+["Ketupat Kepat", 35_000_000, 0.02],
+["La Supreme Combinasion", 40_000_000, 0.02],
+["Garama and Madundung", 50_000_000, 0.02],
+["Spaghetti Tualetti", 60_000_000, 0.02],
+["Los Spaghettis", 70_000_000, 0.02],
+["La Casa Boo", 100_000_000, 0.02],
+["La Secret Combinasion", 125_000_000, 0.02],
+["Burguro and Fryuro", 150_000_000, 0.02],
+["Capitano Moby", 160_000_000, 0.02],
+["Headless Horseman", 175_000_000, 0.02],
+["Dragon Cannelloni", 250_000_000, 0.01],
+["Dragon Gingerini", 300_000_000, 0.01],
+["Meow OG", 450_000_000, 0.001],
+["Strawberry Elephant OG", 550_000_000, 0.001]
+];
 
-  const data = {
-    content: title, // Tiêu đề bình thường
-    embeds: [
-      {
-        description: content, // Nội dung trong embed
-        color: 3447003
-      }
-    ]
-  };
+const mutations = [
+["Default", 1, 0.6],
+["Gold", 1.25, 0.04],
+["Diamond", 1.5, 0.04],
+["Bloodrot", 2, 0.04],
+["Candy", 4, 0.04],
+["Lava", 6, 0.04],
+["Galaxy", 7, 0.04],
+["Yin Yang", 7.5, 0.04],
+["Radioactive", 8.5, 0.04],
+["Cursed", 9, 0.04],
+["Rainbow", 10, 0.04]
+];
 
-  fetch(webhook, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
+const traits = [
+["Strawberry", 8], ["Meowl", 7], ["Fireworks", 6], ["Nyan", 6],
+["Fire", 6], ["Mygame43", 6], ["Reindeer", 6], ["Paint", 6],
+["Indonesia Flag", 5], ["Sombrero", 5], ["Zombie", 5], ["Glitched", 5],
+["Claws", 5], ["Tie", 4.75], ["UFO", 3], ["Rain", 2.5], ["Extinct", 4],
+["Bubblegum", 4], ["Explosive", 4], ["Galactic", 4], ["26", 6], ["R.I.P.", 5],
+["Santa Hat", 5], ["Skibidi", 6.5]
+];
+
+function weightedPick(arr){
+    let total = arr.reduce((a,b)=>a+b[2],0);
+    let r = Math.random()*total;
+    let sum = 0;
+    for(let x of arr){ sum+=x[2]; if(r<=sum) return x; }
+    return arr[arr.length-1];
 }
-</script>
 
+function formatMoney(v){
+    if(v>=1_000_000_000) return (v/1_000_000_000).toFixed(2).replace(/\.00$/,"")+"b/s";
+    if(v>=1_000_000) return (v/1_000_000).toFixed(2).replace(/\.00$/,"")+"m/s";
+    if(v>=1_000) return (v/1_000).toFixed(2).replace(/\.00$/,"")+"k/s";
+    return v+"/s";
+}
+
+function log(msg){
+    const div = document.getElementById("log");
+    div.innerHTML += msg+"<br>";
+    div.scrollTop = div.scrollHeight;
+}
+
+async function sendWebhook(){
+    const webhookUrl = document.getElementById("webhook").value.trim();
+    if(!webhookUrl) { log("Webhook chưa điền"); return; }
+
+    const brainrot = weightedPick(brainrots);
+    const mutation = weightedPick(mutations);
+    const trait = traits[Math.floor(Math.random()*traits.length)];
+    const money = Math.floor(brainrot[1]*mutation[1]*trait[1]);
+    const job_id = crypto.randomUUID();
+
+    const embed = {
+        "title": `${brainrot[0]} ⚡`,
+        "color": 16753920,
+        "fields":[
+            {"name":"Money per second","value":formatMoney(money),"inline":false},
+            {"name":"Mutation","value":mutation[0],"inline":true},
+            {"name":"Trait","value":trait[0],"inline":true},
+            {"name":"Job id","value":job_id,"inline":false},
+            {"name":"Join link","value":`https://phongytb.github.io/phonghub-joiner/?placeId=109983668079237&gameInstanceId=${job_id}`,"inline":false}
+        ]
+    };
+
+    try{
+        await fetch(webhookUrl, {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({"embeds":[embed]})
+        });
+        log("Sent "+brainrot[0]+" "+formatMoney(money));
+    }catch(e){
+        log("Lỗi gửi webhook: "+e);
+    }
+}
+
+function loopSend(){
+    if(!running) return;
+    sendWebhook();
+    const delay = Math.floor(Math.random()*(240-60+1)+60)*1000; // 1-4p
+    loopTimeout = setTimeout(loopSend, delay);
+}
+
+document.getElementById("startBtn").addEventListener("click", ()=>{
+    if(!running){
+        running=true;
+        log("Bắt đầu gửi tự động...");
+        loopSend();
+    }
+});
+document.getElementById("stopBtn").addEventListener("click", ()=>{
+    running=false;
+    if(loopTimeout) clearTimeout(loopTimeout);
+    log("Đã dừng gửi tự động");
+});
+document.getElementById("sendNowBtn").addEventListener("click", ()=>{
+    sendWebhook();
+});
+</script>
 </body>
 </html>
