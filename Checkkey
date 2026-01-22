@@ -1,0 +1,48 @@
+-- Roblox Lua Script: check key + HWID
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local HWID = game:GetService("RbxAnalyticsService"):GetClientId()
+local URL_CHECK = "http://de1.bot-hosting.net:20314/check"
+local SCRIPT_URL = "https://www.roblox.com/share?code=903d7286a67f4f46be51ba2bf629f78a&type=Server"
+
+-- Kiểm tra key đã set chưa
+if getgenv().SCRIPT_KEY == nil or getgenv().SCRIPT_KEY == "" then
+    Players.LocalPlayer:Kick("No key provided")
+end
+
+-- Hàm check key với server
+local function checkKey(key, hwid)
+    local success, response = pcall(function()
+        return HttpService:PostAsync(
+            URL_CHECK,
+            HttpService:JSONEncode({key = key, hwid = hwid}),
+            Enum.HttpContentType.ApplicationJson
+        )
+    end)
+
+    if not success then
+        Players.LocalPlayer:Kick("Error connecting to key server")
+    end
+
+    local data
+    pcall(function() data = HttpService:JSONDecode(response) end)
+    if not data then
+        Players.LocalPlayer:Kick("Invalid response from server")
+    end
+
+    if data.status == "invalid" then
+        Players.LocalPlayer:Kick("Invalid key")
+    elseif data.status == "locked" then
+        Players.LocalPlayer:Kick("Reset HWID for this user")
+    elseif data.status == "ok" then
+        return true
+    else
+        Players.LocalPlayer:Kick("Error checking key")
+    end
+end
+
+-- Thực hiện check
+checkKey(getgenv().SCRIPT_KEY, HWID)
+
+-- Nếu key hợp lệ + HWID khớp → load script
+loadstring(game:HttpGet(SCRIPT_URL))()
