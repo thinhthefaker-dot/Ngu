@@ -1,177 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brainrot Webhook Bot</title>
+<title>Discord Webhook Sender</title>
 <style>
-body { font-family: Arial; background:#111; color:#fff; padding:15px; margin:0;}
-input, button { padding:10px; margin:5px 0; border-radius:5px; border:none; font-size:16px; width:100%; }
-button { cursor:pointer; background:#5865f2; color:white; }
-#log { height:300px; overflow-y:auto; border:1px solid #444; padding:5px; background:#222; font-size:13px; margin-top:10px;}
-a.joinlink { color:#00bfff; text-decoration:none; font-weight:bold; }
-#timer { margin:5px 0; font-size:14px; color:#0f0;}
+body{
+font-family:Arial;
+background:#1e1f22;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:#2b2d31;
+padding:20px;
+border-radius:10px;
+width:320px;
+}
+
+input,textarea{
+width:100%;
+margin-top:8px;
+margin-bottom:12px;
+padding:8px;
+border:none;
+border-radius:6px;
+outline:none;
+}
+
+button{
+width:100%;
+padding:10px;
+background:#3ba55d;
+border:none;
+border-radius:6px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#2f8f4e;
+}
 </style>
 </head>
+
 <body>
 
-<h2>Brainrot Webhook Bot</h2>
-<input type="text" id="webhook" placeholder="Enter Discord Webhook URL">
-<button id="startBtn">Start</button>
-<button id="stopBtn">Stop</button>
-<button id="sendNowBtn">Send Now</button>
-<div id="timer">Next send in: 0s</div>
-<div id="log"></div>
+<div class="box">
+
+<label>Webhook Discord</label>
+<input id="webhook" placeholder="Dán webhook">
+
+<label>Nội dung</label>
+<textarea id="msg" rows="4" placeholder="Nhập tin nhắn"></textarea>
+
+<button onclick="send()">Gửi</button>
+
+</div>
 
 <script>
-// -------------------- DATA --------------------
-const brainrots = [
-["Graipuss Medussi", 1_000_000, 0.08, "😺"],
-["Perrito Burrito", 1_000_000, 0.08, "🌯"],
-["1x1x1x1", 1_100_000, 0.08, "⚡"],
-["Nooo My Hotspot", 1_500_000, 0.08, "🔥"],
-["Los Jobolitos", 1_500_000, 0.08, "💼"],
-["Noo My Examen", 1_700_000, 0.08, "📚"],
-["La Sahur Combinasion", 2_000_000, 0.08, "🥙"],
-["Telemorte", 2_000_000, 0.08, "💀"],
-["To To To Sahur", 2_200_000, 0.08, "🥙"],
-["Pot hotpot", 2_500_000, 0.08, "⚡"],
-["Pirulitoita Bicicleteira", 2_500_000, 0.08, "🍭"],
-["Horegni Boom", 2_700_000, 0.08, "💣"],
-["Quesadilla Cocodrillo", 3_000_000, 0.08, "🫓"],
-["Pot Pumpkin", 3_000_000, 0.08, "🎃"],
-["Chicleteira Bicicleteira", 3_500_000, 0.08, "🍬"],
-["Quesadillo Vampiro", 3_500_000, 0.08, "🦇"],
-["Burrito Bandito", 4_000_000, 0.08, "🌯"],
-["Chicleteirina Bicicleteirina", 4_000_000, 0.08, "🍭"],
-["Noo my Candy", 5_000_000, 0.08, "🍬"],
-["Los Noo My Hotspotitos", 5_500_000, 0.08, "🔥"],
-["La Grande Combinasion", 10_000_000, 0.08, "🥙"],
-["Nuclearo Dinossauro", 15_000_000, 0.02, "🦖"],
-["Chicleteira Noelteira", 15_000_000, 0.02, "🍭"],
-["Los Combinasionas", 15_000_000, 0.02, "🥙"],
-["Las Sis", 17_500_000, 0.02, "👯"],
-["Chillin Chill", 25_000_000, 0.02, "❄️"],
-["Los Puggles", 30_000_000, 0.02, "🐶"],
-["Los Primos", 31_000_000, 0.02, "👬"],
-["Eviledon", 31_500_000, 0.02, "👹"],
-["Tang Tang Keletang", 33_500_000, 0.02, "🎵"],
-["Ketupat Kepat", 35_000_000, 0.02, "🥟"],
-["La Supreme Combinasion", 40_000_000, 0.02, "🥙"],
-["Garama and Madundung", 50_000_000, 0.02, "🐉"],
-["Spaghetti Tualetti", 60_000_000, 0.02, "🍝"],
-["Los Spaghettis", 70_000_000, 0.02, "🍝"],
-["La Casa Boo", 100_000_000, 0.02, "🏠"],
-["La Secret Combinasion", 125_000_000, 0.02, "🥙"],
-["Burguro and Fryuro", 150_000_000, 0.02, "🍔"],
-["Capitano Moby", 160_000_000, 0.02, "🐋"],
-["Headless Horseman", 175_000_000, 0.02, "🎃"],
-["Dragon Cannelloni", 250_000_000, 0.01, "🐉"],
-["Dragon Gingerini", 300_000_000, 0.01, "🐲"],
-["Meow OG", 450_000_000, 0.001, "🐱"],
-["Strawberry Elephant OG", 550_000_000, 0.001, "🐘"],
-["Mariachi Corazoni", 12_500_000, 0.05, "🎺"],
-["Los Chicleteira", 7_000_000, 0.05, "🍬"],
-["Lavadorito Spinto", 45_000_000, 0.05, "💦"],
-["Fragama and Chocrama", 100_000_000, 0.05, "🍫"]
-];
+function send(){
 
-const mutations = [
-["Default", 1, "⚪"], ["Gold",1.25,"🥇"], ["Diamond",1.5,"💎"],
-["Bloodrot",2,"🩸"], ["Candy",4,"🍬"], ["Lava",6,"🌋"],
-["Galaxy",7,"🌌"], ["Yin Yang",7.5,"☯️"], ["Radioactive",8.5,"☢️"],
-["Cursed",9,"☠️"], ["Rainbow",10,"🌈"]
-];
+let webhook=document.getElementById("webhook").value
+let text=document.getElementById("msg").value
 
-const traits = [
-["Strawberry", 8, "🍓"], ["Meowl",7,"😼"], ["Fireworks",6,"🎆"], ["Nyan",6,"🌈"],
-["Fire",6,"🔥"], ["Mygame43",6,"🎮"], ["Reindeer",6,"🦌"], ["Paint",6,"🎨"],
-["Indonesia Flag",5,"🇮🇩"], ["Sombrero",5,"🎩"], ["Zombie",5,"🧟‍♂️"], ["Glitched",5,"💾"],
-["Claws",5,"🦀"], ["Tie",4.75,"👔"], ["UFO",3,"🛸"], ["Rain",2.5,"🌧️"],
-["Extinct",4,"🦕"], ["Bubblegum",4,"🍬"], ["Explosive",4,"💥"], ["Galactic",4,"🌌"],
-["26",6,"2️⃣6️⃣"], ["R.I.P.",5,"⚰️"], ["Santa Hat",5,"🎅"], ["Skibidi",6.5,"🎤"]
-];
-
-// -------------------- FUNCTIONS --------------------
-function weightedPick(data){ return data[Math.floor(Math.random()*data.length)]; }
-function formatMoney(value){
-  if(value>=1_000_000_000) return (value/1_000_000_000).toFixed(2).replace(/\.00$/,'')+"b/s";
-  if(value>=1_000_000) return (value/1_000_000).toFixed(2).replace(/\.00$/,'')+"m/s";
-  if(value>=1_000) return (value/1_000).toFixed(2).replace(/\.00$/,'')+"k/s";
-  return value+"/s";
+fetch(webhook,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+embeds:[
+{
+description:text,
+color:5763719
 }
-function getTimeNow(){
-  const d = new Date();
-  return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+]
+})
+})
+
 }
-function calculateMoney(base, mutation, trait){
-  const hasMutation = mutation[1] !== 1;
-  const hasTrait = trait[1] !== 1;
-  if(hasMutation && hasTrait) return (base * mutation[1]) + (base * trait[1]);
-  if(hasMutation) return base * mutation[1];
-  if(hasTrait) return base * trait[1];
-  return base;
-}
-
-// -------------------- BOT LOGIC --------------------
-let intervalId = null;
-let countdown = 0;
-
-const webhookInput = document.getElementById("webhook");
-const startBtn = document.getElementById("startBtn");
-const stopBtn = document.getElementById("stopBtn");
-const sendNowBtn = document.getElementById("sendNowBtn");
-const logDiv = document.getElementById("log");
-const timerDiv = document.getElementById("timer");
-
-function sendBrainrot(){
-  if(!webhookInput.value){ alert("Enter webhook URL"); return; }
-  const b = weightedPick(brainrots);
-  const m = weightedPick(mutations);
-  const t = weightedPick(traits);
-  const money = calculateMoney(b[1], m, t);
-  const jobId = crypto.randomUUID();
-
-  const embed = {
-    title: `${b[3]} ${b[0]} ⚡`,
-    color: 16753920,
-    fields:[
-      {name:"Money per second", value:formatMoney(money), inline:false},
-      {name:"Mutation", value:`${m[2]} ${m[0]}`, inline:true},
-      {name:"Trait", value:`${t[2]} ${t[0]}`, inline:true},
-      {name:"Job id", value:jobId, inline:false},
-      {name:"Join link", value:`[Click to Join](https://phongytb.github.io/Phonghub-joiner/?placeId=109983668079237&gameInstanceId=${jobId})`, inline:false},
-      {name:"Time", value:getTimeNow(), inline:false}
-    ]
-  };
-
-  fetch(webhookInput.value,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({embeds:[embed]})
-  }).then(()=> logDiv.innerHTML += `[${getTimeNow()}] Sent ${b[0]} ${formatMoney(money)}<br>`)
-    .catch(e=> logDiv.innerHTML += `[${getTimeNow()}] ERROR: ${e}<br>`);
-}
-
-// -------------------- TIMER --------------------
-function startBot(){
-  if(intervalId) return;
-  countdown = Math.floor(Math.random()*180)+60;
-  timerDiv.textContent = `Next send in: ${countdown}s`;
-  intervalId = setInterval(()=>{
-    countdown--;
-    timerDiv.textContent = `Next send in: ${countdown}s`;
-    if(countdown<=0){
-      sendBrainrot();
-      countdown = Math.floor(Math.random()*180)+60;
-    }
-  },1000);
-}
-function stopBot(){ clearInterval(intervalId); intervalId=null; timerDiv.textContent="Stopped"; }
-
-startBtn.onclick=startBot;
-stopBtn.onclick=stopBot;
-sendNowBtn.onclick=()=>{sendBrainrot(); countdown=Math.floor(Math.random()*180)+60;}
 </script>
+
 </body>
 </html>
